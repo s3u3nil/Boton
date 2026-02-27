@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WhatsApp Bot Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0a0e0a;
+  --surface: #111811;
+  --card: #161e16;
+  --border: #1f2e1f;
+  --accent: #25d366;
+  --accent2: #128c7e;
+  --red: #ff4444;
+  --yellow: #ffd700;
+  --blue: #4fc3f7;
+  --text: #e8f5e9;
+  --muted: #5a7a5a;
+  --font: 'Syne', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+/* ── Layout ── */
+.shell { display: flex; height: 100vh; overflow: hidden; }
+.sidebar {
+  width: 240px; min-width: 240px; background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; padding: 0;
+  overflow-y: auto;
+}
+.main { flex: 1; overflow-y: auto; padding: 32px 36px; }
+
+/* ── Sidebar ── */
+.brand {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.brand-icon { font-size: 28px; }
+.brand-name { font-size: 16px; font-weight: 800; letter-spacing: -0.5px; color: var(--accent); margin-top: 4px; }
+.brand-sub  { font-size: 10px; color: var(--muted); font-family: var(--mono); letter-spacing: 1px; }
+
+.nav-section { padding: 12px 12px 4px; font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; font-family: var(--mono); }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; cursor: pointer; font-size: 13px; font-weight: 600;
+  color: var(--muted); transition: all 0.15s; border-radius: 0;
+  border-left: 3px solid transparent;
+}
+.nav-item:hover { color: var(--text); background: rgba(37,211,102,0.05); }
+.nav-item.active { color: var(--accent); background: rgba(37,211,102,0.08); border-left-color: var(--accent); }
+.nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+.status-bar {
+  margin-top: auto;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+.status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 6px; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+/* ── Header ── */
+.page-header { margin-bottom: 28px; }
+.page-title { font-size: 26px; font-weight: 800; letter-spacing: -1px; color: var(--text); }
+.page-sub   { font-size: 12px; color: var(--muted); font-family: var(--mono); margin-top: 4px; }
+
+/* ── Cards ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.card-title {
+  font-size: 12px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted); font-family: var(--mono);
+  margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+}
+.card-title span { color: var(--accent); font-size: 16px; }
+
+/* ── Tabs ── */
+.tabs { display: flex; gap: 4px; margin-bottom: 28px; flex-wrap: wrap; }
+.tab {
+  padding: 8px 18px; border-radius: 8px; cursor: pointer;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+  background: var(--card); border: 1px solid var(--border);
+  color: var(--muted); transition: all 0.15s;
+}
+.tab:hover  { color: var(--text); border-color: var(--accent2); }
+.tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+/* ── Forms ── */
+label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--muted); font-family: var(--mono); display: block; margin-bottom: 6px; }
+input[type=text], input[type=number], textarea, select {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); border-radius: 8px; padding: 10px 14px;
+  font-family: var(--mono); font-size: 12px; outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 80px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.form-col { display: flex; flex-direction: column; }
+
+/* ── Buttons ── */
+.btn {
+  padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer;
+  font-family: var(--font); font-weight: 700; font-size: 12px;
+  letter-spacing: 0.5px; transition: all 0.15s; display: inline-flex;
+  align-items: center; gap: 6px;
+}
+.btn-primary   { background: var(--accent); color: #000; }
+.btn-primary:hover { background: #1db954; transform: translateY(-1px); }
+.btn-danger    { background: rgba(255,68,68,0.15); color: var(--red); border: 1px solid rgba(255,68,68,0.3); }
+.btn-danger:hover  { background: rgba(255,68,68,0.25); }
+.btn-ghost     { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.btn-ghost:hover   { color: var(--text); border-color: var(--muted); }
+.btn-yellow    { background: rgba(255,215,0,0.15); color: var(--yellow); border: 1px solid rgba(255,215,0,0.3); }
+.btn-yellow:hover  { background: rgba(255,215,0,0.25); }
+.btn-sm { padding: 6px 12px; font-size: 11px; }
+
+.btn-row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+
+/* ── Table ── */
+.tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.tbl th { text-align: left; padding: 10px 14px; color: var(--muted); font-family: var(--mono); font-size: 10px; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+.tbl td { padding: 10px 14px; border-bottom: 1px solid rgba(31,46,31,0.5); vertical-align: top; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: rgba(37,211,102,0.03); }
+.tbl .name-cell { font-weight: 600; color: var(--accent); max-width: 200px; }
+.tbl .msg-cell  { color: var(--muted); font-family: var(--mono); font-size: 11px; max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbl .actions   { display: flex; gap: 6px; white-space: nowrap; }
+
+/* ── Critical task item ── */
+.task-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; margin-bottom: 10px;
+}
+.task-num { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 8px; }
+.task-item textarea { margin-bottom: 8px; }
+.task-item input  { margin-bottom: 8px; }
+
+/* ── Badge ── */
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 20px;
+  font-size: 10px; font-weight: 700; font-family: var(--mono); letter-spacing: 0.5px;
+}
+.badge-green  { background: rgba(37,211,102,0.15); color: var(--accent); }
+.badge-red    { background: rgba(255,68,68,0.15);   color: var(--red); }
+.badge-yellow { background: rgba(255,215,0,0.15);   color: var(--yellow); }
+.badge-blue   { background: rgba(79,195,247,0.15);  color: var(--blue); }
+
+/* ── Toast ── */
+#toast {
+  position: fixed; bottom: 30px; right: 30px;
+  background: var(--accent); color: #000;
+  padding: 12px 24px; border-radius: 10px;
+  font-weight: 700; font-size: 13px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s; z-index: 9999;
+}
+#toast.show { opacity: 1; }
+#toast.err  { background: var(--red); color: #fff; }
+
+/* ── Loading ── */
+.loading { text-align: center; padding: 60px; color: var(--muted); font-family: var(--mono); }
+.spinner { display: inline-block; width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Schedule grid ── */
+.sched-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.sched-item label { margin-bottom: 6px; }
+
+/* ── Sent today ── */
+.sent-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(37,211,102,0.1); border: 1px solid rgba(37,211,102,0.2);
+  border-radius: 6px; padding: 4px 10px; margin: 4px; font-size: 11px; font-family: var(--mono);
+}
+
+/* ── Page ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── Section header ── */
+.section-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.section-label   { font-size: 14px; font-weight: 700; }
+
+/* ── Inline edit row ── */
+.edit-row {
+  display: grid; grid-template-columns: 220px 1fr 80px;
+  gap: 10px; align-items: start; margin-bottom: 8px;
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-icon">💬</div>
+    <div class="brand-name">WA Bot Control</div>
+    <div class="brand-sub">LOCAL DASHBOARD</div>
+  </div>
+
+  <div class="nav-section">Overview</div>
+  <div class="nav-item active" onclick="goto('home')">
+    <span class="icon">🏠</span> Dashboard
+  </div>
+  <div class="nav-item" onclick="goto('sent')">
+    <span class="icon">📊</span> Sent Today
+  </div>
+
+  <div class="nav-section">Messages</div>
+  <div class="nav-item" onclick="goto('daily')">
+    <span class="icon">📅</span> Daily Groups
+  </div>
+  <div class="nav-item" onclick="goto('weekly')">
+    <span class="icon">📆</span> Weekly Groups
+  </div>
+  <div class="nav-item" onclick="goto('monthly')">
+    <span class="icon">🗓️</span> Monthly Groups
+  </div>
+  <div class="nav-item" onclick="goto('templates')">
+    <span class="icon">✏️</span> Message Templates
+  </div>
+
+  <div class="nav-section">Special</div>
+  <div class="nav-item" onclick="goto('critical')">
+    <span class="icon">🔴</span> Critical Tasks
+  </div>
+  <div class="nav-item" onclick="goto('lists')">
+    <span class="icon">📋</span> List Groups
+  </div>
+  <div class="nav-item" onclick="goto('vclab')">
+    <span class="icon">🔬</span> VC Lab
+  </div>
+
+  <div class="nav-section">Config</div>
+  <div class="nav-item" onclick="goto('schedule')">
+    <span class="icon">⏰</span> Schedule
+  </div>
+
+  <div class="status-bar">
+    <div><span class="status-dot"></span>Server running</div>
+    <div style="margin-top:6px;color:#3a5a3a">localhost:3000</div>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+
+<!-- HOME -->
+<div id="page-home" class="page active">
+  <div class="page-header">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">WHATSAPP BOT CONTROL PANEL</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">
+    <div class="card" style="border-left:3px solid var(--accent)">
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">DAILY GROUPS</div>
+      <div id="stat-daily" style="font-size:36px;font-weight:800;color:var(--accent)">—</div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--red)">
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">CRITICAL TASKS</div>
+      <div id="stat-critical" style="font-size:36px;font-weight:800;color:var(--red)">—</div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--blue)">
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">SENT TODAY</div>
+      <div id="stat-sent" style="font-size:36px;font-weight:800;color:var(--blue)">—</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <div class="card-title"><span>⏰</span> Send Schedule</div>
+      <div id="home-schedule" style="font-family:var(--mono);font-size:13px;color:var(--muted)">Loading...</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>📌</span> Quick Info</div>
+      <div style="font-family:var(--mono);font-size:12px;color:var(--muted);line-height:2">
+        <div>Daily:   <strong style="color:var(--text)" id="info-fixed">—</strong> fixed groups</div>
+        <div>Weekly:  <strong style="color:var(--text)" id="info-weekly">—</strong> groups</div>
+        <div>Monthly: <strong style="color:var(--text)" id="info-monthly">—</strong> groups</div>
+        <div>Infra Critical: <strong style="color:var(--red)" id="info-ct1">—</strong> tasks</div>
+        <div>LSAD Critical:  <strong style="color:var(--yellow)" id="info-ct2">—</strong> tasks</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SENT TODAY -->
+<div id="page-sent" class="page">
+  <div class="page-header">
+    <div class="page-title">Sent Today</div>
+    <div class="page-sub">GROUPS MESSAGED SO FAR</div>
+  </div>
+  <div class="card">
+    <div class="section-actions">
+      <div class="section-label">Today's Sent Log</div>
+      <button class="btn btn-danger btn-sm" onclick="clearSent()">🗑 Clear & Reset</button>
+    </div>
+    <div id="sent-list">Loading...</div>
+  </div>
+</div>
+
+<!-- DAILY GROUPS -->
+<div id="page-daily" class="page">
+  <div class="page-header">
+    <div class="page-title">Daily Groups</div>
+    <div class="page-sub">FIXED CUSTOM MESSAGES PER GROUP</div>
+  </div>
+  <div class="card">
+    <div class="section-actions">
+      <div class="section-label" id="daily-count">Groups</div>
+      <button class="btn btn-primary btn-sm" onclick="addFixed()">+ Add Group</button>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>Group Name</th><th>Message</th><th>Actions</th></tr></thead>
+      <tbody id="fixed-table"></tbody>
+    </table>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveFixed()">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- WEEKLY -->
+<div id="page-weekly" class="page">
+  <div class="page-header">
+    <div class="page-title">Weekly Groups</div>
+    <div class="page-sub">SENT EVERY FRIDAY (OR CONFIGURED DAY)</div>
+  </div>
+  <div class="card">
+    <div class="section-actions">
+      <div class="section-label" id="weekly-count">Groups</div>
+      <button class="btn btn-primary btn-sm" onclick="addWeekly()">+ Add Group</button>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>Group Name</th><th>Message</th><th>Actions</th></tr></thead>
+      <tbody id="weekly-table"></tbody>
+    </table>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveWeekly()">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- MONTHLY -->
+<div id="page-monthly" class="page">
+  <div class="page-header">
+    <div class="page-title">Monthly Groups</div>
+    <div class="page-sub">SENT ON CONFIGURED DAY OF MONTH</div>
+  </div>
+  <div class="card">
+    <div class="section-actions">
+      <div class="section-label" id="monthly-count">Groups</div>
+      <button class="btn btn-primary btn-sm" onclick="addMonthly()">+ Add Group</button>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>Group Name</th><th>Message</th><th>Actions</th></tr></thead>
+      <tbody id="monthly-table"></tbody>
+    </table>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveMonthly()">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- TEMPLATES -->
+<div id="page-templates" class="page">
+  <div class="page-header">
+    <div class="page-title">Message Templates</div>
+    <div class="page-sub">DEFAULT & HR ROTATING MESSAGES</div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'tmpl-default')">Default Messages</div>
+    <div class="tab" onclick="switchTab(this,'tmpl-hr')">HR Messages</div>
+  </div>
+  <div id="tmpl-default">
+    <div class="card">
+      <div class="card-title"><span>📢</span> Default Rotating Messages</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px;font-family:var(--mono)">Used for all groups without a fixed message. Rotates every 2 days.</div>
+      <div id="default-msgs"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-sm" onclick="addDefaultMsg()">+ Add Variant</button>
+        <button class="btn btn-primary" onclick="saveDefaultMsgs()">💾 Save</button>
+      </div>
+    </div>
+  </div>
+  <div id="tmpl-hr" style="display:none">
+    <div class="card">
+      <div class="card-title"><span>👥</span> HR Rotating Messages</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px;font-family:var(--mono)">Used for groups with "recruitment" in the name.</div>
+      <div id="hr-msgs"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-sm" onclick="addHRMsg()">+ Add Variant</button>
+        <button class="btn btn-primary" onclick="saveHRMsgs()">💾 Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CRITICAL -->
+<div id="page-critical" class="page">
+  <div class="page-header">
+    <div class="page-title">Critical Tasks</div>
+    <div class="page-sub">INFRA & LSAD CRITICAL ISSUE LISTS</div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'crit-infra')">🔴 Infra Critical</div>
+    <div class="tab" onclick="switchTab(this,'crit-lsad')">🟥 LSAD Critical</div>
+  </div>
+  <div id="crit-infra">
+    <div class="card">
+      <div class="card-title"><span>🔴</span> Infra Critical Tasks</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:16px;font-family:var(--mono)">Each task is numbered and sent with @mentions. Phone: full format with country code.</div>
+      <div id="infra-tasks"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-sm" onclick="addCritTask(1)">+ Add Task</button>
+        <button class="btn btn-primary" onclick="saveCrit(1)">💾 Save Infra Tasks</button>
+      </div>
+    </div>
+  </div>
+  <div id="crit-lsad" style="display:none">
+    <div class="card">
+      <div class="card-title"><span>🟥</span> LSAD Critical Tasks</div>
+      <div id="lsad-tasks"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-sm" onclick="addCritTask(2)">+ Add Task</button>
+        <button class="btn btn-primary" onclick="saveCrit(2)">💾 Save LSAD Tasks</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LISTS -->
+<div id="page-lists" class="page">
+  <div class="page-header">
+    <div class="page-title">List Groups</div>
+    <div class="page-sub">NUMBERED TASK LISTS SENT TO SPECIFIC GROUPS</div>
+  </div>
+  <div class="card">
+    <div class="section-actions">
+      <div class="section-label" id="list-count">List Groups</div>
+      <button class="btn btn-primary btn-sm" onclick="addListGroup()">+ Add List Group</button>
+    </div>
+    <div id="list-groups-container"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveListGroups()">💾 Save All Lists</button>
+    </div>
+  </div>
+</div>
+
+<!-- VC LAB -->
+<div id="page-vclab" class="page">
+  <div class="page-header">
+    <div class="page-title">VC Lab Group</div>
+    <div class="page-sub">SENT 4× DAILY TO A SINGLE GROUP</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span>🔬</span> VC Lab Configuration</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;font-family:var(--mono)">
+      Reminders sent at: 9:05 AM · 11:45 AM · 2:47 PM · 4:02 PM
+    </div>
+    <div class="form-col" style="margin-bottom:14px">
+      <label>GROUP NAME</label>
+      <input type="text" id="vc-name" placeholder="VC sir Lab 37 - 302 P1 🔴"/>
+    </div>
+    <div class="form-col">
+      <label>REMINDER MESSAGE</label>
+      <textarea id="vc-msg" rows="4"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveVCLab()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCHEDULE -->
+<div id="page-schedule" class="page">
+  <div class="page-header">
+    <div class="page-title">Schedule</div>
+    <div class="page-sub">TIMING CONFIGURATION</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span>⏰</span> Daily Send Time</div>
+    <div class="sched-grid">
+      <div class="form-col">
+        <label>HOUR (0-23)</label>
+        <input type="number" id="sched-hour" min="0" max="23"/>
+      </div>
+      <div class="form-col">
+        <label>MINUTE (0-59)</label>
+        <input type="number" id="sched-min" min="0" max="59"/>
+      </div>
+      <div class="form-col">
+        <label>MONTHLY DAY (1-28)</label>
+        <input type="number" id="sched-mday" min="1" max="28"/>
+      </div>
+      <div class="form-col">
+        <label>WEEKLY DAY (0=Sun…6=Sat)</label>
+        <input type="number" id="sched-wday" min="0" max="6"/>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--muted)" id="sched-preview"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveSchedule()">💾 Save Schedule</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span>📌</span> Fixed Cron Times (hardcoded)</div>
+    <div style="font-family:var(--mono);font-size:12px;color:var(--muted);line-height:2.2">
+      <div>🔴 Critical Reminders: <strong style="color:var(--text)">9:00 AM · 2:00 PM</strong></div>
+      <div>📋 List Groups:        <strong style="color:var(--text)">9:10 AM</strong></div>
+      <div>🔬 VC Lab:             <strong style="color:var(--text)">9:05 AM · 11:45 AM · 2:47 PM · 4:02 PM</strong></div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div><!-- /shell -->
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let CFG = {};
+
+// ═══════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════
+async function boot() {
+  try {
+    const r = await fetch('/api/config');
+    CFG = await r.json();
+    renderAll();
+  } catch(e) {
+    showToast('Cannot connect to server. Is server.js running?', true);
+  }
+}
+
+function renderAll() {
+  renderHome();
+  renderFixed();
+  renderWeekly();
+  renderMonthly();
+  renderTemplates();
+  renderCritical();
+  renderLists();
+  renderVCLab();
+  renderSchedule();
+  loadSentToday();
+}
+
+// ═══════════════════════════════════════════════
+//  HOME
+// ═══════════════════════════════════════════════
+function renderHome() {
+  document.getElementById('stat-daily').textContent    = Object.keys(CFG.fixedGroups||{}).length;
+  document.getElementById('stat-critical').textContent = (CFG.criticalTasks||[]).length + (CFG.criticalTasks2||[]).length;
+  document.getElementById('info-fixed').textContent    = Object.keys(CFG.fixedGroups||{}).length;
+  document.getElementById('info-weekly').textContent   = Object.keys(CFG.weeklyGroups||{}).length;
+  document.getElementById('info-monthly').textContent  = Object.keys(CFG.monthlyGroups||{}).length;
+  document.getElementById('info-ct1').textContent      = (CFG.criticalTasks||[]).length;
+  document.getElementById('info-ct2').textContent      = (CFG.criticalTasks2||[]).length;
+
+  const s = CFG.schedule || {};
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const h = String(s.sendHour||8).padStart(2,'0');
+  const m = String(s.sendMinute||45).padStart(2,'0');
+  document.getElementById('home-schedule').innerHTML = `
+    <div style="line-height:2.2">
+      <div>📬 Daily send: <strong style="color:var(--accent)">${h}:${m}</strong></div>
+      <div>📆 Weekly day: <strong style="color:var(--text)">${days[s.weeklyDay]||'Fri'}</strong></div>
+      <div>🗓 Monthly day: <strong style="color:var(--text)">${s.monthlyDay||10}th</strong> of month</div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════
+//  SENT TODAY
+// ═══════════════════════════════════════════════
+async function loadSentToday() {
+  try {
+    const r = await fetch('/api/sent-today');
+    const data = await r.json();
+    const keys = Object.keys(data);
+    document.getElementById('stat-sent').textContent = keys.length;
+    const el = document.getElementById('sent-list');
+    if (keys.length === 0) {
+      el.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:12px;padding:20px 0">No messages sent yet today.</div>';
+      return;
+    }
+    el.innerHTML = keys.map(k =>
+      `<span class="sent-chip">✅ ${esc(k)}</span>`
+    ).join('');
+  } catch(e) {}
+}
+
+async function clearSent() {
+  if (!confirm('Clear today\'s sent log? Bot will re-send to all groups!')) return;
+  await fetch('/api/sent-today', { method: 'DELETE' });
+  showToast('Sent log cleared');
+  loadSentToday();
+}
+
+// ═══════════════════════════════════════════════
+//  FIXED DAILY GROUPS
+// ═══════════════════════════════════════════════
+function renderFixed() {
+  const tbody = document.getElementById('fixed-table');
+  const entries = Object.entries(CFG.fixedGroups||{});
+  document.getElementById('daily-count').textContent = `${entries.length} Groups`;
+  tbody.innerHTML = entries.map(([name, msg], i) => `
+    <tr id="fixed-row-${i}">
+      <td class="name-cell"><input type="text" value="${esc(name)}" style="width:100%;min-width:180px" data-key="fixed-name-${i}"/></td>
+      <td><textarea data-key="fixed-msg-${i}" style="width:100%;min-width:280px;min-height:55px">${esc(msg)}</textarea></td>
+      <td class="actions">
+        <button class="btn btn-danger btn-sm" onclick="deleteFixed(${i})">✕</button>
+      </td>
+    </tr>`).join('');
+}
+
+function addFixed() {
+  const entries = Object.entries(CFG.fixedGroups||{});
+  CFG.fixedGroups['New Group ' + Date.now()] = '🔆 Reminder: ';
+  renderFixed();
+}
+
+function deleteFixed(i) {
+  const keys = Object.keys(CFG.fixedGroups);
+  delete CFG.fixedGroups[keys[i]];
+  renderFixed();
+}
+
+function collectFixed() {
+  const obj = {};
+  document.querySelectorAll('[data-key^="fixed-name-"]').forEach((el, i) => {
+    const name = el.value.trim();
+    const msg  = document.querySelector(`[data-key="fixed-msg-${i}"]`).value.trim();
+    if (name) obj[name] = msg;
+  });
+  return obj;
+}
+
+async function saveFixed() {
+  CFG.fixedGroups = collectFixed();
+  await saveSection('fixedGroups', CFG.fixedGroups);
+  renderFixed();
+}
+
+// ═══════════════════════════════════════════════
+//  WEEKLY GROUPS
+// ═══════════════════════════════════════════════
+function renderWeekly() {
+  renderSimpleTable('weekly-table', 'weekly-count', CFG.weeklyGroups||{}, 'weekly');
+}
+function addWeekly()   { CFG.weeklyGroups['New Group'] = '🔆 Reminder: '; renderWeekly(); }
+async function saveWeekly()  { CFG.weeklyGroups = collectSimple('weekly'); await saveSection('weeklyGroups', CFG.weeklyGroups); renderWeekly(); }
+
+// ═══════════════════════════════════════════════
+//  MONTHLY GROUPS
+// ═══════════════════════════════════════════════
+function renderMonthly() {
+  renderSimpleTable('monthly-table', 'monthly-count', CFG.monthlyGroups||{}, 'monthly');
+}
+function addMonthly()   { CFG.monthlyGroups['New Group'] = '🔆 Monthly Reminder: '; renderMonthly(); }
+async function saveMonthly() { CFG.monthlyGroups = collectSimple('monthly'); await saveSection('monthlyGroups', CFG.monthlyGroups); renderMonthly(); }
+
+// ── Shared simple-table renderer ────────────────
+function renderSimpleTable(tbodyId, countId, obj, prefix) {
+  const entries = Object.entries(obj);
+  if (countId) document.getElementById(countId).textContent = `${entries.length} Groups`;
+  document.getElementById(tbodyId).innerHTML = entries.map(([name, msg], i) => `
+    <tr>
+      <td><input type="text" value="${esc(name)}" data-key="${prefix}-name-${i}" style="min-width:180px"/></td>
+      <td><textarea data-key="${prefix}-msg-${i}" style="min-width:280px;min-height:55px">${esc(msg)}</textarea></td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteSimple('${prefix}',${i})">✕</button></td>
+    </tr>`).join('');
+}
+
+function collectSimple(prefix) {
+  const obj = {};
+  document.querySelectorAll(`[data-key^="${prefix}-name-"]`).forEach((el, i) => {
+    const name = el.value.trim();
+    const msg  = document.querySelector(`[data-key="${prefix}-msg-${i}"]`)?.value.trim() || '';
+    if (name) obj[name] = msg;
+  });
+  return obj;
+}
+
+function deleteSimple(prefix, i) {
+  if (prefix === 'weekly')  { const k=Object.keys(CFG.weeklyGroups)[i];  delete CFG.weeklyGroups[k];  renderWeekly(); }
+  if (prefix === 'monthly') { const k=Object.keys(CFG.monthlyGroups)[i]; delete CFG.monthlyGroups[k]; renderMonthly(); }
+}
+
+// ═══════════════════════════════════════════════
+//  TEMPLATES
+// ═══════════════════════════════════════════════
+function renderTemplates() {
+  renderMsgList('default-msgs', CFG.defaultMessages||[], 'dmsg');
+  renderMsgList('hr-msgs',      CFG.hrMessages||[],      'hrmsg');
+}
+
+function renderMsgList(containerId, arr, prefix) {
+  document.getElementById(containerId).innerHTML = arr.map((msg, i) => `
+    <div style="display:flex;gap:10px;margin-bottom:10px;align-items:start">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:12px;min-width:20px">${i+1}</span>
+      <textarea data-key="${prefix}-${i}" style="flex:1;min-height:70px">${esc(msg)}</textarea>
+      <button class="btn btn-danger btn-sm" style="margin-top:6px" onclick="deleteMsgVariant('${prefix}',${i})">✕</button>
+    </div>`).join('');
+}
+
+function addDefaultMsg() { CFG.defaultMessages.push('🔆 Reminder: '); renderTemplates(); }
+function addHRMsg()      { CFG.hrMessages.push('🔆 Reminder: HR team '); renderTemplates(); }
+
+function deleteMsgVariant(prefix, i) {
+  if (prefix === 'dmsg')  { CFG.defaultMessages.splice(i,1); }
+  if (prefix === 'hrmsg') { CFG.hrMessages.splice(i,1); }
+  renderTemplates();
+}
+
+async function saveDefaultMsgs() {
+  CFG.defaultMessages = [...document.querySelectorAll('[data-key^="dmsg-"]')].map(el => el.value.trim()).filter(Boolean);
+  await saveSection('defaultMessages', CFG.defaultMessages);
+}
+async function saveHRMsgs() {
+  CFG.hrMessages = [...document.querySelectorAll('[data-key^="hrmsg-"]')].map(el => el.value.trim()).filter(Boolean);
+  await saveSection('hrMessages', CFG.hrMessages);
+}
+
+// ═══════════════════════════════════════════════
+//  CRITICAL TASKS
+// ═══════════════════════════════════════════════
+function renderCritical() {
+  renderCritList('infra-tasks', CFG.criticalTasks||[],  'ct1');
+  renderCritList('lsad-tasks',  CFG.criticalTasks2||[], 'ct2');
+}
+
+function renderCritList(containerId, tasks, prefix) {
+  document.getElementById(containerId).innerHTML = tasks.map((task, i) => {
+    const tagsVal = task.tags ? task.tags.join(', ') : (task.tag || '');
+    return `
+    <div class="task-item" id="${prefix}-task-${i}">
+      <div class="task-num"># ${i+1} &nbsp;
+        <button class="btn btn-danger btn-sm" style="padding:2px 8px;font-size:10px" onclick="deleteCritTask('${prefix}',${i})">✕ Remove</button>
+        <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:10px" onclick="moveCritTask('${prefix}',${i},-1)">↑</button>
+        <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:10px" onclick="moveCritTask('${prefix}',${i},1)">↓</button>
+      </div>
+      <label>TASK DESCRIPTION</label>
+      <textarea data-key="${prefix}-text-${i}" style="margin-bottom:8px">${esc(task.text||'')}</textarea>
+      <label>PHONE NUMBER(S) — comma separated for multiple</label>
+      <input type="text" data-key="${prefix}-tag-${i}" value="${esc(tagsVal)}" placeholder="919876543210 or 919876543210, 919999999999"/>
+    </div>`}).join('');
+}
+
+function addCritTask(which) {
+  const prefix = which === 1 ? 'ct1' : 'ct2';
+  const arr    = which === 1 ? CFG.criticalTasks : CFG.criticalTasks2;
+  arr.push({ text: '', tag: '' });
+  if (which === 1) renderCritList('infra-tasks', arr, 'ct1');
+  else             renderCritList('lsad-tasks',  arr, 'ct2');
+}
+
+function deleteCritTask(prefix, i) {
+  if (prefix === 'ct1') { CFG.criticalTasks.splice(i,1);  renderCritList('infra-tasks', CFG.criticalTasks,  'ct1'); }
+  if (prefix === 'ct2') { CFG.criticalTasks2.splice(i,1); renderCritList('lsad-tasks',  CFG.criticalTasks2, 'ct2'); }
+}
+
+function moveCritTask(prefix, i, dir) {
+  const arr = prefix === 'ct1' ? CFG.criticalTasks : CFG.criticalTasks2;
+  const j   = i + dir;
+  if (j < 0 || j >= arr.length) return;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  if (prefix === 'ct1') renderCritList('infra-tasks', arr, 'ct1');
+  else                  renderCritList('lsad-tasks',  arr, 'ct2');
+}
+
+function collectCrit(prefix, which) {
+  const arr = [];
+  const count = document.querySelectorAll(`[data-key^="${prefix}-text-"]`).length;
+  for (let i = 0; i < count; i++) {
+    const text = document.querySelector(`[data-key="${prefix}-text-${i}"]`)?.value.trim() || '';
+    const tagVal = document.querySelector(`[data-key="${prefix}-tag-${i}"]`)?.value.trim() || '';
+    const parts  = tagVal.split(',').map(s => s.trim()).filter(Boolean);
+    const obj = { text };
+    if (parts.length > 1) obj.tags = parts;
+    else obj.tag = parts[0] || '';
+    arr.push(obj);
+  }
+  return arr;
+}
+
+async function saveCrit(which) {
+  const prefix = which === 1 ? 'ct1' : 'ct2';
+  const arr    = collectCrit(prefix, which);
+  if (which === 1) CFG.criticalTasks  = arr;
+  else             CFG.criticalTasks2 = arr;
+  await saveSection(which === 1 ? 'criticalTasks' : 'criticalTasks2', arr);
+  renderCritical();
+}
+
+// ═══════════════════════════════════════════════
+//  LIST GROUPS
+// ═══════════════════════════════════════════════
+function renderLists() {
+  const container = document.getElementById('list-groups-container');
+  const groups    = CFG.listGroups || {};
+  const names     = Object.keys(groups);
+  document.getElementById('list-count').textContent = `${names.length} List Groups`;
+
+  container.innerHTML = names.map((name, gi) => {
+    const config = groups[name];
+    const tasks  = config.tasks || [];
+    return `
+    <div class="task-item" style="margin-bottom:16px" id="lg-${gi}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span class="badge badge-blue">LIST GROUP ${gi+1}</span>
+        <button class="btn btn-danger btn-sm" onclick="deleteListGroup('${esc(name)}')">✕ Remove Group</button>
+      </div>
+      <div class="form-row">
+        <div class="form-col">
+          <label>GROUP NAME (WhatsApp)</label>
+          <input type="text" data-key="lg-name-${gi}" value="${esc(name)}"/>
+        </div>
+        <div class="form-col">
+          <label>LIST TITLE (shown in message)</label>
+          <input type="text" data-key="lg-title-${gi}" value="${esc(config.title||'')}"/>
+        </div>
+      </div>
+      <label>TASKS (one per line)</label>
+      <textarea data-key="lg-tasks-${gi}" style="min-height:120px;font-family:var(--mono);font-size:11px">${tasks.map(esc).join('\n')}</textarea>
+    </div>`;
+  }).join('');
+}
+
+function addListGroup() {
+  const name = 'New List Group ' + Date.now();
+  CFG.listGroups[name] = { title: 'New List', tasks: [] };
+  renderLists();
+}
+
+function deleteListGroup(name) {
+  delete CFG.listGroups[name];
+  renderLists();
+}
+
+async function saveListGroups() {
+  const obj = {};
+  const count = document.querySelectorAll('[data-key^="lg-name-"]').length;
+  for (let i = 0; i < count; i++) {
+    const name  = document.querySelector(`[data-key="lg-name-${i}"]`)?.value.trim();
+    const title = document.querySelector(`[data-key="lg-title-${i}"]`)?.value.trim() || name;
+    const raw   = document.querySelector(`[data-key="lg-tasks-${i}"]`)?.value || '';
+    const tasks = raw.split('\n').map(s=>s.trim()).filter(Boolean);
+    if (name) obj[name] = { title, tasks };
+  }
+  CFG.listGroups = obj;
+  await saveSection('listGroups', obj);
+  renderLists();
+}
+
+// ═══════════════════════════════════════════════
+//  VC LAB
+// ═══════════════════════════════════════════════
+function renderVCLab() {
+  document.getElementById('vc-name').value = CFG.vcLabGroupName || '';
+  document.getElementById('vc-msg').value  = CFG.vcLabMessage   || '';
+}
+
+async function saveVCLab() {
+  // VC Lab name/message require direct regex replacement in bot.js
+  // We patch them via a special endpoint workaround
+  showToast('⚠️ VC Lab name/message: Edit directly in bot.js (server.js does not patch these scalars yet)', true);
+  // To properly support: extend server.js replaceScalar for VC_LAB_GROUP_NAME and VC_LAB_MESSAGE
+}
+
+// ═══════════════════════════════════════════════
+//  SCHEDULE
+// ═══════════════════════════════════════════════
+function renderSchedule() {
+  const s = CFG.schedule || {};
+  document.getElementById('sched-hour').value  = s.sendHour   ?? 8;
+  document.getElementById('sched-min').value   = s.sendMinute ?? 45;
+  document.getElementById('sched-mday').value  = s.monthlyDay ?? 10;
+  document.getElementById('sched-wday').value  = s.weeklyDay  ?? 5;
+  updateSchedPreview();
+  document.querySelectorAll('#page-schedule input').forEach(el => el.addEventListener('input', updateSchedPreview));
+}
+
+function updateSchedPreview() {
+  const h = document.getElementById('sched-hour').value;
+  const m = document.getElementById('sched-min').value;
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const wd = parseInt(document.getElementById('sched-wday').value);
+  const md = document.getElementById('sched-mday').value;
+  document.getElementById('sched-preview').textContent =
+    `→ Daily at ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')} · Weekly on ${days[wd]||'?'} · Monthly on ${md}th`;
+}
+
+async function saveSchedule() {
+  const data = {
+    sendHour:   parseInt(document.getElementById('sched-hour').value),
+    sendMinute: parseInt(document.getElementById('sched-min').value),
+    monthlyDay: parseInt(document.getElementById('sched-mday').value),
+    weeklyDay:  parseInt(document.getElementById('sched-wday').value),
+  };
+  CFG.schedule = data;
+  await saveSection('schedule', data);
+  renderHome();
+}
+
+// ═══════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════
+function goto(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (page === 'sent') loadSentToday();
+}
+
+function switchTab(el, targetId) {
+  const parent = el.closest('.page') || el.parentElement.parentElement;
+  parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  // Hide siblings: find all div siblings of the tabs container that match our ids
+  const tabGroups = {
+    'tmpl-default': ['tmpl-default', 'tmpl-hr'],
+    'tmpl-hr':      ['tmpl-default', 'tmpl-hr'],
+    'crit-infra':   ['crit-infra', 'crit-lsad'],
+    'crit-lsad':    ['crit-infra', 'crit-lsad'],
+  };
+  const siblings = tabGroups[targetId] || [];
+  siblings.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = id === targetId ? 'block' : 'none';
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  API SAVE
+// ═══════════════════════════════════════════════
+async function saveSection(section, data) {
+  try {
+    const r = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ section, data })
+    });
+    const res = await r.json();
+    if (res.ok) showToast('✅ Saved! Restart bot to apply changes.');
+    else showToast('❌ ' + res.error, true);
+  } catch(e) {
+    showToast('❌ Server error: ' + e.message, true);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════
+function esc(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let toastTimer;
+function showToast(msg, isErr=false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = 'show' + (isErr ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 3500);
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+boot();
+</script>
+</body>
+</html>
