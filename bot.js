@@ -250,7 +250,7 @@ function getDailyMessage(groupName) {
 // ================= WHATSAPP CLIENT =================
 
 const client = new Client({
-  authStrategy: new LocalAuth({ dataPath: './auth' }),
+  authStrategy: new LocalAuth({ dataPath: './session' }),
   puppeteer: {
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
