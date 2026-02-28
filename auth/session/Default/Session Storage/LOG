@@ -1,2 +1,3 @@
-2026/02/27-22:10:20.902 117c Creating DB /home/naruto/Pictures/on/auth/session/Default/Session Storage since it was missing.
-2026/02/27-22:10:20.952 117c Reusing MANIFEST /home/naruto/Pictures/on/auth/session/Default/Session Storage/MANIFEST-000001
+2026/02/27-22:47:05.954 1663 Reusing MANIFEST /home/naruto/Pictures/on/auth/session/Default/Session Storage/MANIFEST-000001
+2026/02/27-22:47:05.955 1663 Recovering log #3
+2026/02/27-22:47:05.956 1663 Reusing old log /home/naruto/Pictures/on/auth/session/Default/Session Storage/000003.log 

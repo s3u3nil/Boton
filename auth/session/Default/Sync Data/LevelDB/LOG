@@ -1,2 +1,3 @@
-2026/02/27-22:10:20.820 115c Creating DB /home/naruto/Pictures/on/auth/session/Default/Sync Data/LevelDB since it was missing.
-2026/02/27-22:10:20.843 115c Reusing MANIFEST /home/naruto/Pictures/on/auth/session/Default/Sync Data/LevelDB/MANIFEST-000001
+2026/02/27-22:47:05.113 164d Reusing MANIFEST /home/naruto/Pictures/on/auth/session/Default/Sync Data/LevelDB/MANIFEST-000001
+2026/02/27-22:47:05.119 164d Recovering log #3
+2026/02/27-22:47:05.119 164d Reusing old log /home/naruto/Pictures/on/auth/session/Default/Sync Data/LevelDB/000003.log 

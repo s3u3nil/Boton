@@ -36,7 +36,7 @@ const WEEKLY_GROUPS = {
 
 const DEFAULT_MESSAGES = [
   "🔆 Reminder:\nAll concern Engineers/Architects/Staff/Faculty requested to update the status of work in this group. *(Daily DPR is Mandatory)*",
-  "🔆  Gentle Reminder:\nEngineers/Architects/Staff/Faculty Please update today’s work status in this group. *(Daily DPR and Work Progress Photos are Mandatory)*",
+  "🔆  Gentle Reminder:\nEngineers/Architects/Staff/Faculty Please update today's work status in this group. *(Daily DPR is Mandatory)*",
   "🔆 Update Request:\nEngineers/Architects/Staff/Faculty Kindly share current work progress status. *(Daily DPR and Work Progress Photos are Mandatory)*"
 ];
 
@@ -154,12 +154,6 @@ const CRITICAL_TASKS = [
  { text: "Nylon Net for Safety- ", tags: ["919872720252","917508183822"]},
  { text: "PENALTY AND INCENTIVE SYSTEM PLANNING- ", tag: ""},
  { text: "BSF cantt sculpture vendor- ", tag: ""},
-
-
-
-
-
-
   // keep full list same
 ];
 // ================= CRITICAL GROUP 2 =================
@@ -434,7 +428,7 @@ async function sendReminders() {
 if (
   groupName === CRITICAL_GROUP_NAME ||
   groupName === CRITICAL_GROUP_NAME_2 ||
-  groupName === 'VC_LAB_GROUP_NAME'
+  groupName === VC_LAB_GROUP_NAME
 ) continue;
       if (group.id._serialized === ADMIN_GROUP_ID) continue;
       if (sentGroups[groupName]) continue;
@@ -517,11 +511,67 @@ Groups Sent Today: ${Object.keys(sentData).length}`);
   }
 });
 
+// ================= DASHBOARD: SAVE GROUPS LIST =================
+// Saves all group names to groups-list.json so dashboard can categorize them
+
+async function saveGroupsList() {
+  try {
+    const chats = await client.getChats();
+    const groups = chats
+      .filter(c => c.isGroup && !c.archived)
+      .map(c => c.name?.trim())
+      .filter(Boolean);
+    fs.writeFileSync('groups-list.json', JSON.stringify(groups, null, 2));
+    console.log(`📋 Groups list saved (${groups.length} groups)`);
+  } catch (e) {
+    console.error('Error saving groups list:', e);
+  }
+}
+
+// ================= DASHBOARD: MANUAL SEND (from dashboard) =================
+// Checks pending-send.json every minute and sends via bot
+
+async function checkPendingSends() {
+  const pendingFile = 'pending-send.json';
+  if (!fs.existsSync(pendingFile)) return;
+
+  try {
+    const pending = JSON.parse(fs.readFileSync(pendingFile, 'utf8'));
+    if (!pending.length) return;
+
+    const chats = await client.getChats();
+
+    for (const item of pending) {
+      // Skip items older than 5 minutes
+      if (Date.now() - item.timestamp > 5 * 60 * 1000) {
+        console.log(`⏭ Expired send skipped: "${item.group}"`);
+        continue;
+      }
+      const group = chats.find(c => c.isGroup && c.name?.trim() === item.group);
+      if (group) {
+        await group.sendMessage(item.msg);
+        console.log(`📤 Dashboard manual send → "${item.group}"`);
+      } else {
+        console.log(`❌ Group not found for manual send: "${item.group}"`);
+      }
+    }
+
+    // Clear after processing
+    fs.writeFileSync(pendingFile, '[]');
+  } catch (e) {
+    console.error('Pending send error:', e);
+  }
+}
+
 // ================= READY & CRON =================
 
 client.on('ready', () => {
   console.log('✅ WhatsApp Ready');
   console.log('🤖 BOT RUNNING...');
+
+  // ── Dashboard additions ──
+  saveGroupsList();                                        // saves groups on startup
+  cron.schedule('*/1 * * * *', checkPendingSends);        // checks manual sends every minute
 
   cron.schedule(`${SEND_MINUTE} ${SEND_HOUR} * * *`, async () => {
     const res = await sendReminders();
