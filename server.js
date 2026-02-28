@@ -4,7 +4,7 @@
  * Open: http://localhost:3000
  * Place this file in the SAME folder as your bot.js
  */
-require("./bot");
+
 const express = require('express');
 const fs      = require('fs');
 const path    = require('path');
